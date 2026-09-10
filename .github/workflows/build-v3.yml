@@ -1,0 +1,52 @@
+name: Build Mini MMORPG V3
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Baixar projeto
+        uses: actions/checkout@v4
+
+      - name: Extrair ZIP V3
+        run: |
+          mkdir v3
+          unzip -o MiniMMO_Android_V3_GitHub_Build.zip -d v3
+
+      - name: Configurar Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configurar Android
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar Android SDK
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Criar Gradle Wrapper
+        run: |
+          cd v3
+          gradle wrapper --gradle-version 8.10.2
+
+      - name: Compilar APK
+        run: |
+          cd v3
+          ./gradlew assembleDebug
+
+      - name: Enviar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniMMO-V3-APK
+          path: v3/app/build/outputs/apk/debug/app-debug.apk
