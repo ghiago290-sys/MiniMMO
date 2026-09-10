@@ -1,0 +1,49 @@
+name: Compilar APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar projeto
+        uses: actions/checkout@v4
+
+      - name: Descompactar projeto
+        run: |
+          unzip -o MiniMMO_Android_V2_GitHub_Build.zip -d projeto
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Configurar Android
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar Android SDK
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Instalar Gradle
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.10.2-bin.zip
+          unzip -q gradle-8.10.2-bin.zip -d $HOME
+          echo "$HOME/gradle-8.10.2/bin" >> $GITHUB_PATH
+
+      - name: Gerar Gradle Wrapper
+        working-directory: projeto
+        run: gradle wrapper --gradle-version 8.10.2
+
+      - name: Compilar APK
+        working-directory: projeto
+        run: ./gradlew assembleDebug
+
+      - name: Disponibilizar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniMMO-APK
+          path: projeto/app/build/outputs/apk/debug/app-debug.apk
